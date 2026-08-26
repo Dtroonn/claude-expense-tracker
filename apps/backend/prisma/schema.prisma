@@ -1,0 +1,27 @@
+// Prisma 7 schema.
+//
+// Intentionally model-less: this is a scaffold. Add your first model (User,
+// Category, Expense, ...) below, then run `pnpm db:migrate` from the repo root
+// to create the initial migration. Until a model exists, `prisma migrate` has
+// nothing to do — `pnpm db:generate` still works and emits an empty client.
+
+generator client {
+  // Prisma 7 replaced `prisma-client-js` with `prisma-client`, which requires
+  // an explicit output path. The generated client is gitignored.
+  //
+  // moduleFormat is pinned to cjs because Nest compiles to CommonJS; left to
+  // its default the generator infers ESM and emits `import.meta.url`, which
+  // breaks the Nest build.
+  provider               = "prisma-client"
+  output                 = "../src/generated/prisma"
+  moduleFormat           = "cjs"
+  generatedFileExtension = "ts"
+  importFileExtension    = "cjs"
+}
+
+datasource db {
+  // Prisma 7 removed `url` from the schema. The connection string for the CLI
+  // (migrate, studio) now lives in ../prisma.config.ts, and the runtime client
+  // gets it via a driver adapter — see src/prisma/prisma.service.ts.
+  provider = "postgresql"
+}

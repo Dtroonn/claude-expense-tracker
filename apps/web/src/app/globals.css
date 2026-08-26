@@ -1,0 +1,26 @@
+@import 'tailwindcss';
+
+/* Tailwind v4 is configured in CSS via @theme rather than tailwind.config.js.
+   @theme must be top level, so the dark variants are plain :root overrides. */
+@theme {
+  --color-surface: #ffffff;
+  --color-surface-muted: #f6f7f9;
+  --color-ink: #11181c;
+  --color-ink-muted: #5b6770;
+  --color-accent: #2f6f4f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-surface: #0e1113;
+    --color-surface-muted: #171b1e;
+    --color-ink: #eceef0;
+    --color-ink-muted: #9aa4ab;
+    --color-accent: #6bbd8f;
+  }
+}
+
+body {
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+}

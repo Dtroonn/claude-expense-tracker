@@ -1,0 +1,57 @@
+{
+  "name": "expense-tracker",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "start": "turbo run start",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "format": "prettier --write \"**/*.{ts,tsx,js,mjs,cjs,json,md,css}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,mjs,cjs,json,md,css}\"",
+    "db:generate": "pnpm --filter @expense-tracker/backend db:generate",
+    "db:migrate": "pnpm --filter @expense-tracker/backend db:migrate",
+    "db:studio": "pnpm --filter @expense-tracker/backend db:studio",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "clean": "turbo run clean && rimraf node_modules",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@expense-tracker/eslint-config": "workspace:*",
+    "@expense-tracker/tsconfig": "workspace:*",
+    "eslint": "^10.8.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.3.0",
+    "prettier": "^3.9.6",
+    "rimraf": "^6.0.1",
+    "turbo": "^2.10.10",
+    "typescript": "5.9.3"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "*.{js,mjs,cjs,json,md,css}": [
+      "prettier --write"
+    ]
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/engines",
+      "prisma",
+      "unrs-resolver",
+      "@tailwindcss/oxide",
+      "sharp",
+      "esbuild"
+    ]
+  }
+}
