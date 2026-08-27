@@ -1,4 +1,4 @@
-import { type HealthResponse, healthResponseSchema } from '@expense-tracker/shared';
+import { type HealthResponseDto, healthResponseSchema } from '@expense-tracker/shared';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
@@ -8,7 +8,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
  * if this renders "ok", then the workspace linking, the shared package, and
  * both apps are wired up correctly.
  */
-async function fetchHealth(): Promise<HealthResponse | null> {
+async function fetchHealth(): Promise<HealthResponseDto | null> {
   try {
     const res = await fetch(`${API_URL}/api/health`, { cache: 'no-store' });
     if (!res.ok) return null;

@@ -7,8 +7,9 @@
  * responses). One source of truth, no hand-kept duplicate interfaces.
  *
  * Domain contracts (expenses, categories, budgets) go in sibling modules as the
- * app grows — this file only carries the health contract used by the scaffold.
+ * app grows. Currently: health, user, auth, category.
  */
+export * from './common';
 export * from './health';
 export * from './user';
 export * from './auth';

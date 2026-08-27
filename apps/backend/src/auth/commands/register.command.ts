@@ -1,7 +1,7 @@
 import { Command } from '@nestjs/cqrs';
-import { type AuthResponse } from '@expense-tracker/shared';
+import { type AuthResponseDto } from '@expense-tracker/shared';
 
-export class RegisterCommand extends Command<AuthResponse> {
+export class RegisterCommand extends Command<AuthResponseDto> {
   constructor(
     public readonly email: string,
     public readonly name: string,

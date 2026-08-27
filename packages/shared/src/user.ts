@@ -1,15 +1,14 @@
 import { z } from 'zod';
+import { isoDateSchema } from './common';
 
 /**
  * The user shape safe to send to a client — never includes `passwordHash`.
  */
-export const publicUserSchema = z.object({
+export const userResponseSchema = z.object({
   id: z.string(),
   email: z.string(),
   name: z.string(),
-  createdAt: z
-    .union([z.date(), z.iso.datetime()])
-    .transform((value) => (value instanceof Date ? value.toISOString() : value)),
+  createdAt: isoDateSchema,
 });
 
-export type PublicUser = z.infer<typeof publicUserSchema>;
+export type UserResponseDto = z.infer<typeof userResponseSchema>;

@@ -2,7 +2,7 @@ import { randomBytes, createHash } from 'node:crypto';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { type AuthTokens, type PublicUser } from '@expense-tracker/shared';
+import { type AuthTokensDto, type UserResponseDto } from '@expense-tracker/shared';
 import { RefreshTokenRepository } from './refresh-token.repository';
 
 const REFRESH_TOKEN_BYTES = 32;
@@ -27,7 +27,7 @@ function parseDurationMs(duration: string): number {
 }
 
 export interface AccessTokenPayload {
-  user: PublicUser;
+  user: UserResponseDto;
 }
 
 /**
@@ -56,7 +56,7 @@ export class TokenService {
     });
   }
 
-  async issueTokens(user: PublicUser): Promise<AuthTokens> {
+  async issueTokens(user: UserResponseDto): Promise<AuthTokensDto> {
     const accessExpiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '15m');
     const refreshExpiresIn = this.configService.get<string>('JWT_REFRESH_EXPIRES_IN', '7d');
     const accessExpiresInSeconds = Math.floor(parseDurationMs(accessExpiresIn) / 1000);

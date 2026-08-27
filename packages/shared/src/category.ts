@@ -1,13 +1,12 @@
 import { z } from 'zod';
+import { isoDateSchema } from './common';
 
 export const categoryResponseSchema = z.object({
   id: z.string(),
   title: z.string(),
   color: z.string(),
   icon: z.string(),
-  createdAt: z
-    .union([z.date(), z.iso.datetime()])
-    .transform((value) => (value instanceof Date ? value.toISOString() : value)),
+  createdAt: isoDateSchema,
 });
 
 export type CategoryResponseDto = z.infer<typeof categoryResponseSchema>;
@@ -16,7 +15,7 @@ export const categoryListResponseSchema = z.array(categoryResponseSchema);
 
 export type CategoryListResponseDto = z.infer<typeof categoryListResponseSchema>;
 
-const colorSchema = z.string().regex(/^#[0-9a-fA-F]{6}$/);
+export const colorSchema = z.string().regex(/^#[0-9a-fA-F]{6}$/);
 
 export const createCategorySchema = z.object({
   title: z.string().min(1).trim(),

@@ -1,26 +1,26 @@
 import { z } from 'zod';
-import { publicUserSchema } from './user';
+import { userResponseSchema } from './user';
 
-export const registerRequestSchema = z.object({
+export const registerSchema = z.object({
   email: z.email(),
   name: z.string().min(1).trim(),
   password: z.string().min(8).trim(),
 });
 
-export type RegisterRequest = z.infer<typeof registerRequestSchema>;
+export type RegisterDto = z.infer<typeof registerSchema>;
 
-export const loginRequestSchema = z.object({
+export const loginSchema = z.object({
   email: z.email(),
   password: z.string().min(1),
 });
 
-export type LoginRequest = z.infer<typeof loginRequestSchema>;
+export type LoginDto = z.infer<typeof loginSchema>;
 
-export const refreshRequestSchema = z.object({
+export const refreshSchema = z.object({
   refreshToken: z.string().min(1),
 });
 
-export type RefreshRequest = z.infer<typeof refreshRequestSchema>;
+export type RefreshDto = z.infer<typeof refreshSchema>;
 
 export const authTokensSchema = z.object({
   accessToken: z.string(),
@@ -28,11 +28,11 @@ export const authTokensSchema = z.object({
   expiresIn: z.number(),
 });
 
-export type AuthTokens = z.infer<typeof authTokensSchema>;
+export type AuthTokensDto = z.infer<typeof authTokensSchema>;
 
 export const authResponseSchema = z.object({
-  user: publicUserSchema,
+  user: userResponseSchema,
   tokens: authTokensSchema,
 });
 
-export type AuthResponse = z.infer<typeof authResponseSchema>;
+export type AuthResponseDto = z.infer<typeof authResponseSchema>;

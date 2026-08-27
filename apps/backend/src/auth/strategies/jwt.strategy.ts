@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { type AccessTokenPayload } from '../token.service';
-import { type PublicUser, publicUserSchema } from '@expense-tracker/shared';
+import { type UserResponseDto, userResponseSchema } from '@expense-tracker/shared';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -15,7 +15,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  validate(payload: AccessTokenPayload): PublicUser {
-    return publicUserSchema.parse(payload.user);
+  validate(payload: AccessTokenPayload): UserResponseDto {
+    return userResponseSchema.parse(payload.user);
   }
 }

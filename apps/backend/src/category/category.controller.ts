@@ -12,24 +12,19 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import {
-  type CategoryListResponseDto,
-  type CategoryResponseDto,
-  type CreateCategoryDto,
-  type PublicUser,
-  type UpdateCategoryDto,
-  categoryListResponseSchema,
-  categoryResponseSchema,
-  createCategorySchema,
-  updateCategorySchema,
-} from '@expense-tracker/shared';
-import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
+import { type UserResponseDto } from '@expense-tracker/shared';
+import { ZodSerializerDto } from 'nestjs-zod';
+import { CategoryListResponseDtoClass } from './dto/category-list-response.dto';
+import { CategoryResponseDtoClass } from './dto/category-response.dto';
+import { CreateCategoryDtoClass } from './dto/create-category.dto';
+import { UpdateCategoryDtoClass } from './dto/update-category.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateCategoryCommand } from './commands/create-category.command';
 import { DeleteCategoryCommand } from './commands/delete-category.command';
 import { UpdateCategoryCommand } from './commands/update-category.command';
 import { GetCategoriesQuery } from './queries/get-categories.query';
+import { type Category } from '@/generated/prisma/client';
 
 @Controller('categories')
 @UseGuards(JwtAuthGuard)
@@ -40,35 +35,38 @@ export class CategoryController {
   ) {}
 
   @Get()
-  async findAll(@CurrentUser() user: PublicUser): Promise<CategoryListResponseDto> {
-    const categories = await this.queryBus.execute(new GetCategoriesQuery(user.id));
-    return categoryListResponseSchema.parse(categories);
+  @ZodSerializerDto(CategoryListResponseDtoClass)
+  findAll(@CurrentUser() user: UserResponseDto): Promise<Category[]> {
+    return this.queryBus.execute(new GetCategoriesQuery(user.id));
   }
 
   @Post()
-  async create(
-    @CurrentUser() user: PublicUser,
-    @Body(new ZodValidationPipe(createCategorySchema)) body: CreateCategoryDto,
-  ): Promise<CategoryResponseDto> {
-    const category = await this.commandBus.execute(
+  @ZodSerializerDto(CategoryResponseDtoClass)
+  create(
+    @CurrentUser() user: UserResponseDto,
+    @Body() body: CreateCategoryDtoClass,
+  ): Promise<Category> {
+    return this.commandBus.execute(
       new CreateCategoryCommand(user.id, body.title, body.color, body.icon),
     );
-    return categoryResponseSchema.parse(category);
   }
 
   @Patch(':id')
-  async update(
-    @CurrentUser() user: PublicUser,
+  @ZodSerializerDto(CategoryResponseDtoClass)
+  update(
+    @CurrentUser() user: UserResponseDto,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body(new ZodValidationPipe(updateCategorySchema)) body: UpdateCategoryDto,
-  ): Promise<CategoryResponseDto> {
-    const category = await this.commandBus.execute(new UpdateCategoryCommand(user.id, id, body));
-    return categoryResponseSchema.parse(category);
+    @Body() body: UpdateCategoryDtoClass,
+  ): Promise<Category> {
+    return this.commandBus.execute(new UpdateCategoryCommand(user.id, id, body));
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  delete(@CurrentUser() user: PublicUser, @Param('id', ParseUUIDPipe) id: string): Promise<void> {
+  delete(
+    @CurrentUser() user: UserResponseDto,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
     return this.commandBus.execute(new DeleteCategoryCommand(user.id, id));
   }
 }

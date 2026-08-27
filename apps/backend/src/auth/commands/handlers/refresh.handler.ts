@@ -1,6 +1,6 @@
 import { CommandHandler, QueryBus, type ICommandHandler } from '@nestjs/cqrs';
 import { UnauthorizedException } from '@nestjs/common';
-import { type AuthResponse, authResponseSchema, publicUserSchema } from '@expense-tracker/shared';
+import { type AuthResponseDto, userResponseSchema } from '@expense-tracker/shared';
 import { GetUserByIdQuery } from '../../../user/queries/get-user-by-id.query';
 import { TokenService } from '../../token.service';
 import { RefreshCommand } from '../refresh.command';
@@ -12,7 +12,7 @@ export class RefreshHandler implements ICommandHandler<RefreshCommand> {
     private readonly tokenService: TokenService,
   ) {}
 
-  async execute(command: RefreshCommand): Promise<AuthResponse> {
+  async execute(command: RefreshCommand): Promise<AuthResponseDto> {
     const userId = await this.tokenService.redeemRefreshToken(command.refreshToken);
     const user = await this.queryBus.execute(new GetUserByIdQuery(userId));
 
@@ -20,9 +20,9 @@ export class RefreshHandler implements ICommandHandler<RefreshCommand> {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    const publicUser = publicUserSchema.parse(user);
+    const publicUser = userResponseSchema.parse(user);
     const tokens = await this.tokenService.issueTokens(publicUser);
 
-    return authResponseSchema.parse({ user: publicUser, tokens });
+    return { user: publicUser, tokens };
   }
 }
