@@ -1,7 +1,7 @@
 import { Query } from '@nestjs/cqrs';
-import { type UserRecord } from '../user.repository';
+import { type User } from '@/generated/prisma/client';
 
-export class GetUserByIdQuery extends Query<UserRecord | null> {
+export class GetUserByIdQuery extends Query<User | null> {
   constructor(public readonly id: string) {
     super();
   }

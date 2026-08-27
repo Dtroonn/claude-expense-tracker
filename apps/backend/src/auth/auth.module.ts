@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CqrsModule } from '@nestjs/cqrs';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { CryptoModule } from '../shared/crypto/crypto.module';
 import { UserModule } from '../user/user.module';
 import { AuthController } from './auth.controller';
 import { LoginHandler } from './commands/handlers/login.handler';
@@ -20,6 +21,7 @@ const commandHandlers = [RegisterHandler, LoginHandler, RefreshHandler, LogoutHa
   imports: [
     CqrsModule,
     UserModule,
+    CryptoModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],

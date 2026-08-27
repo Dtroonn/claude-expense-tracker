@@ -4,9 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-Scaffold only — there is no domain code yet. The Prisma schema has **no models**, and the
-backend exposes a single health endpoint. Expense/category/budget modelling, auth, and
-migrations are all still to be written.
+Early. The Prisma schema has `User` and `RefreshToken`; the backend has a health endpoint
+plus a working auth stack (register / login / refresh / logout, JWT access tokens with
+rotating opaque refresh tokens). Expense/category/budget modelling is still to be written.
+
+**Testing is out of scope for now.** Don't add tests, and don't treat a failing `pnpm test` /
+`pnpm test:e2e` as a blocker. The e2e suite currently fails to resolve the generated Prisma
+client: the generator emits `.ts` sources with `.js` import specifiers, and Jest can't resolve
+those — it breaks as soon as anything in the module graph reaches `PrismaService`, which the
+auth stack does. Verify work with `pnpm typecheck` and `pnpm lint` instead.
 
 ## Commands
 
@@ -71,6 +77,29 @@ against a file that only exists as `health.js` post-compile in a different layou
 `PrismaModule` is `@Global()`, so `PrismaService` injects into any feature module without
 re-importing.
 
+### CQRS
+
+**There is no per-feature service layer.** Business logic lives directly in command and query
+handlers — `user/` has a repository plus handlers and nothing between them. Do not reintroduce
+a `UserService`-style class; a handler that needs shared machinery injects it instead.
+
+Cross-cutting helpers live in `src/shared/` as their own modules — currently
+`shared/crypto/crypto.module.ts` exporting `PasswordHasherService` (bcrypt hashing and
+comparison, cost factor in one place). Import `CryptoModule` where a handler needs it.
+
+**Commands and queries carry their result type**: they extend `Command<T>` / `Query<T>` from
+`@nestjs/cqrs` and call `super()`. That makes `execute()` infer the result, so it's
+`this.queryBus.execute(new GetUserByIdQuery(id))` with no type arguments — never
+`execute<GetUserByIdQuery, User | null>(...)`. `ICommandHandler<C>` / `IQueryHandler<Q>` pick
+up the same type, so handler `execute` methods need no return annotation either. Controllers
+still annotate their return types with the shared contract type (`Promise<AuthResponse>`);
+with typed commands this is checked against the bus rather than asserted.
+
+**Repository methods return the generated Prisma types** (`User`, `RefreshToken`, and
+`Prisma.*CreateInput`) imported from `@/generated/prisma/client`. Do not hand-write
+`UserRecord`-style row interfaces — the generated types are the source of truth for DB shapes,
+the way `packages/shared` is for wire shapes.
+
 ## Non-obvious constraints
 
 **TypeScript is pinned to exactly `5.9.3` across every package** even though 7.x is `latest`
@@ -115,6 +144,18 @@ plain `:root` blocks inside the media query.
 **The backend e2e suite stubs `PrismaService`** (`apps/backend/test/app.e2e-spec.ts`), so it
 runs with no database and no generated client. Keep it that way unless a test genuinely needs
 Postgres.
+
+**Injected constructor params must be VALUE imports, never `import { type Foo }`.** The
+backend compiles with `emitDecoratorMetadata`, and a type-only import is erased before
+metadata is emitted — `design:paramtypes` then records `Function` instead of the class, Nest
+cannot resolve the dependency, and the app fails at startup with a "cannot resolve
+dependency ... at index [n]" error. Confirmed by compiling both forms and diffing the emitted
+`__metadata` call, not assumed from docs. `@typescript-eslint/consistent-type-imports` is
+therefore **off** in `packages/eslint-config/nest.js` — it autofixes working DI into broken DI.
+Note that editors run their own TS "prefer type-only auto-imports" setting independently of
+ESLint; if imports keep flipping back to `type` on save, that's the IDE, and the setting needs
+turning off locally. Type-only imports remain correct for everything that is *not* injected
+(zod schemas, `ICommandHandler`, interfaces, contract types).
 
 ESLint uses flat config throughout (ESLint 10); app-level `eslint.config.mjs` files just
 re-export from `packages/eslint-config`.

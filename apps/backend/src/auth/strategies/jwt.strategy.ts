@@ -1,11 +1,11 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { type ConfigService } from '@nestjs/config';
-import { type QueryBus } from '@nestjs/cqrs';
+import { ConfigService } from '@nestjs/config';
+import { QueryBus } from '@nestjs/cqrs';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { GetUserByIdQuery } from '../../user/queries/get-user-by-id.query';
 import { type AccessTokenPayload } from '../token.service';
-import { toPublicUser } from '../to-public-user';
+import { publicUserSchema } from '@expense-tracker/shared';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -27,6 +27,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Invalid access token');
     }
 
-    return toPublicUser(user);
+    return publicUserSchema.parse(user);
   }
 }

@@ -1,9 +1,9 @@
 import { randomBytes, createHash } from 'node:crypto';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { type ConfigService } from '@nestjs/config';
-import { type JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { type AuthTokens } from '@expense-tracker/shared';
-import { type RefreshTokenRepository } from './refresh-token.repository';
+import { RefreshTokenRepository } from './refresh-token.repository';
 
 const REFRESH_TOKEN_BYTES = 32;
 

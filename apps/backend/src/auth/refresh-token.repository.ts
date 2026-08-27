@@ -1,34 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { type PrismaService } from '../prisma/prisma.service';
-
-export interface RefreshTokenRecord {
-  id: string;
-  tokenHash: string;
-  userId: string;
-  expiresAt: Date;
-  revokedAt: Date | null;
-  createdAt: Date;
-}
-
-export interface CreateRefreshTokenInput {
-  tokenHash: string;
-  userId: string;
-  expiresAt: Date;
-}
+import { PrismaService } from '../prisma/prisma.service';
+import { type Prisma, type RefreshToken } from '@/generated/prisma/client';
 
 @Injectable()
 export class RefreshTokenRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(input: CreateRefreshTokenInput): Promise<RefreshTokenRecord> {
+  create(input: Prisma.RefreshTokenUncheckedCreateInput): Promise<RefreshToken> {
     return this.prisma.client.refreshToken.create({ data: input });
   }
 
-  findByTokenHash(tokenHash: string): Promise<RefreshTokenRecord | null> {
+  findByTokenHash(tokenHash: string): Promise<RefreshToken | null> {
     return this.prisma.client.refreshToken.findUnique({ where: { tokenHash } });
   }
 
-  revoke(id: string): Promise<RefreshTokenRecord> {
+  revoke(id: string): Promise<RefreshToken> {
     return this.prisma.client.refreshToken.update({
       where: { id },
       data: { revokedAt: new Date() },
