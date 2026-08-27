@@ -4,9 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-Early. The Prisma schema has `User` and `RefreshToken`; the backend has a health endpoint
-plus a working auth stack (register / login / refresh / logout, JWT access tokens with
-rotating opaque refresh tokens). Expense/category/budget modelling is still to be written.
+Early. The Prisma schema has `User`, `RefreshToken`, and `Category`; the backend has a health
+endpoint, a working auth stack (register / login / refresh / logout, JWT access tokens with
+rotating opaque refresh tokens), and CRUD for categories. Expense/budget modelling is still to
+be written.
 
 **Testing is out of scope for now.** Don't add tests, and don't treat a failing `pnpm test` /
 `pnpm test:e2e` as a blocker. The e2e suite currently fails to resolve the generated Prisma
@@ -62,17 +63,27 @@ example). The backend builds responses and `.parse()`s them through the schema; 
 imports the inferred type and re-parses the response. One source of truth — do not hand-write
 duplicate interfaces on either side.
 
-`packages/shared` ships **raw TypeScript with no build step**, consumed three different ways:
-Next via `transpilePackages` (`apps/web/next.config.ts`), Nest via normal `node_modules`
-resolution (it's pnpm-workspace-linked and declares `main`/`types`/`exports` pointing at
-`src/index.ts`, so no tsconfig `paths` entry is needed), Jest via `moduleNameMapper` (Jest
-doesn't do TS-aware resolution, so it still needs one). Adding a new consumer means wiring a
-fourth.
-
-Because of that, the package deliberately **declares no `"type"` field and uses extensionless
-relative imports**. Each consumer's compiler picks the module format. Adding `"type": "module"`
-or a `.js` specifier breaks the Nest build — CommonJS emit becomes `require("./health.js")`
-against a file that only exists as `health.js` post-compile in a different layout.
+`packages/shared` **builds with `tsup`** (`tsup.config.ts`), emitting both `dist/index.js`
+(cjs) and `dist/index.mjs` (esm) from the single `src/index.ts` entry, with `dts: false` —
+`package.json`'s `types` field points straight at `src/index.ts` instead of a generated
+`.d.ts`. `exports` maps `require` to the cjs build and `import`/`default` to the esm build, so
+Next consumes the esm output and Nest consumes the cjs output. `apps/web/next.config.ts` still
+lists it under `transpilePackages`. That flag has two separate jobs: making Next resolve raw TS
+source at all (moot now — `dist/index.mjs` is plain compiled JS), and routing the package's code
+through Next's own SWC pass so it gets downleveled to Next's built-in target instead of shipping
+untouched — Next does not transpile `node_modules`/workspace packages by default, and there's no
+`.browserslistrc` here since Next's target is baked into SWC rather than read from a
+browserslist file. Whether that second job is still load-bearing depends on whether tsup's
+esbuild output target already matches what Next/SWC targets; `tsup.config.ts` sets no explicit
+`target`, so this hasn't been verified either way — don't assume the entry is dead without
+checking `tsup.config.ts`'s current `target` and Next's build output for `dist/index.mjs`
+syntax. Jest still needs its own `moduleNameMapper` since it doesn't do package
+`exports`-aware resolution.
+Turborepo's `build`/`lint`/`typecheck`/`test` tasks all `dependsOn: ["^build"]`, so running them
+from the root rebuilds `packages/shared` first automatically. `dev` does **not** depend on
+build, so after changing anything under `packages/shared/src` while `pnpm dev` is running,
+rebuild it manually (`pnpm --filter @expense-tracker/shared build`, or run `pnpm --filter
+@expense-tracker/shared dev` alongside for `tsup --watch`) — consumers read `dist`, not `src`.
 
 `PrismaModule` is `@Global()`, so `PrismaService` injects into any feature module without
 re-importing.
@@ -145,17 +156,7 @@ plain `:root` blocks inside the media query.
 runs with no database and no generated client. Keep it that way unless a test genuinely needs
 Postgres.
 
-**Injected constructor params must be VALUE imports, never `import { type Foo }`.** The
-backend compiles with `emitDecoratorMetadata`, and a type-only import is erased before
-metadata is emitted — `design:paramtypes` then records `Function` instead of the class, Nest
-cannot resolve the dependency, and the app fails at startup with a "cannot resolve
-dependency ... at index [n]" error. Confirmed by compiling both forms and diffing the emitted
-`__metadata` call, not assumed from docs. `@typescript-eslint/consistent-type-imports` is
-therefore **off** in `packages/eslint-config/nest.js` — it autofixes working DI into broken DI.
-Note that editors run their own TS "prefer type-only auto-imports" setting independently of
-ESLint; if imports keep flipping back to `type` on save, that's the IDE, and the setting needs
-turning off locally. Type-only imports remain correct for everything that is *not* injected
-(zod schemas, `ICommandHandler`, interfaces, contract types).
+**Injected constructor params must be VALUE imports, never `import { type Foo }`.**
 
 ESLint uses flat config throughout (ESLint 10); app-level `eslint.config.mjs` files just
 re-export from `packages/eslint-config`.
