@@ -1,6 +1,6 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { CommandHandler, QueryBus, type ICommandHandler } from '@nestjs/cqrs';
-import { authResponseSchema } from '@expense-tracker/shared';
+import { authResponseSchema, publicUserSchema } from '@expense-tracker/shared';
 import { GetUserByEmailQuery } from '../../../user/queries/get-user-by-email.query';
 import { PasswordHasherService } from '../../../shared/crypto/password-hasher.service';
 import { TokenService } from '../../token.service';
@@ -25,8 +25,9 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const tokens = await this.tokenService.issueTokens(user.id, user.email);
+    const publicUser = publicUserSchema.parse(user);
+    const tokens = await this.tokenService.issueTokens(publicUser);
 
-    return authResponseSchema.parse({ user, tokens });
+    return authResponseSchema.parse({ user: publicUser, tokens });
   }
 }

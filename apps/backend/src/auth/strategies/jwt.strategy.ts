@@ -1,18 +1,13 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { QueryBus } from '@nestjs/cqrs';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { GetUserByIdQuery } from '../../user/queries/get-user-by-id.query';
 import { type AccessTokenPayload } from '../token.service';
-import { publicUserSchema } from '@expense-tracker/shared';
+import { type PublicUser, publicUserSchema } from '@expense-tracker/shared';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(
-    configService: ConfigService,
-    private readonly queryBus: QueryBus,
-  ) {
+  constructor(configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -20,13 +15,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: AccessTokenPayload) {
-    const user = await this.queryBus.execute(new GetUserByIdQuery(payload.sub));
-
-    if (!user) {
-      throw new UnauthorizedException('Invalid access token');
-    }
-
-    return publicUserSchema.parse(user);
+  validate(payload: AccessTokenPayload): PublicUser {
+    return publicUserSchema.parse(payload.user);
   }
 }
