@@ -16,7 +16,10 @@ export class RegisterHandler implements ICommandHandler<RegisterCommand> {
       new CreateUserCommand(command.email, command.name, command.password),
     );
 
-    const publicUser = userResponseSchema.parse(user);
+    const publicUser = userResponseSchema.parse({
+      ...user,
+      createdAt: user.createdAt.toISOString(),
+    });
     const tokens = await this.tokenService.issueTokens(publicUser);
 
     return { user: publicUser, tokens };

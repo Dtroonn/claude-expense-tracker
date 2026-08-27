@@ -12,9 +12,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { type UserResponseDto } from '@expense-tracker/shared';
-import { ZodSerializerDto } from 'nestjs-zod';
-import { CategoryListResponseDtoClass } from './dto/category-list-response.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { type CategoryResponseDto, type UserResponseDto } from '@expense-tracker/shared';
+import { ZodResponse } from 'nestjs-zod';
 import { CategoryResponseDtoClass } from './dto/category-response.dto';
 import { CreateCategoryDtoClass } from './dto/create-category.dto';
 import { UpdateCategoryDtoClass } from './dto/update-category.dto';
@@ -24,8 +24,9 @@ import { CreateCategoryCommand } from './commands/create-category.command';
 import { DeleteCategoryCommand } from './commands/delete-category.command';
 import { UpdateCategoryCommand } from './commands/update-category.command';
 import { GetCategoriesQuery } from './queries/get-categories.query';
-import { type Category } from '@/generated/prisma/client';
 
+@ApiTags('categories')
+@ApiBearerAuth()
 @Controller('categories')
 @UseGuards(JwtAuthGuard)
 export class CategoryController {
@@ -35,30 +36,36 @@ export class CategoryController {
   ) {}
 
   @Get()
-  @ZodSerializerDto(CategoryListResponseDtoClass)
-  findAll(@CurrentUser() user: UserResponseDto): Promise<Category[]> {
-    return this.queryBus.execute(new GetCategoriesQuery(user.id));
+  @ZodResponse({ type: [CategoryResponseDtoClass] })
+  async findAll(@CurrentUser() user: UserResponseDto): Promise<CategoryResponseDto[]> {
+    const categories = await this.queryBus.execute(new GetCategoriesQuery(user.id));
+    return categories.map((category) => ({
+      ...category,
+      createdAt: category.createdAt.toISOString(),
+    }));
   }
 
   @Post()
-  @ZodSerializerDto(CategoryResponseDtoClass)
-  create(
+  @ZodResponse({ type: CategoryResponseDtoClass })
+  async create(
     @CurrentUser() user: UserResponseDto,
     @Body() body: CreateCategoryDtoClass,
-  ): Promise<Category> {
-    return this.commandBus.execute(
+  ): Promise<CategoryResponseDto> {
+    const category = await this.commandBus.execute(
       new CreateCategoryCommand(user.id, body.title, body.color, body.icon),
     );
+    return { ...category, createdAt: category.createdAt.toISOString() };
   }
 
   @Patch(':id')
-  @ZodSerializerDto(CategoryResponseDtoClass)
-  update(
+  @ZodResponse({ type: CategoryResponseDtoClass })
+  async update(
     @CurrentUser() user: UserResponseDto,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: UpdateCategoryDtoClass,
-  ): Promise<Category> {
-    return this.commandBus.execute(new UpdateCategoryCommand(user.id, id, body));
+  ): Promise<CategoryResponseDto> {
+    const category = await this.commandBus.execute(new UpdateCategoryCommand(user.id, id, body));
+    return { ...category, createdAt: category.createdAt.toISOString() };
   }
 
   @Delete(':id')

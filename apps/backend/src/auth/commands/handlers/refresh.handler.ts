@@ -20,7 +20,10 @@ export class RefreshHandler implements ICommandHandler<RefreshCommand> {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    const publicUser = userResponseSchema.parse(user);
+    const publicUser = userResponseSchema.parse({
+      ...user,
+      createdAt: user.createdAt.toISOString(),
+    });
     const tokens = await this.tokenService.issueTokens(publicUser);
 
     return { user: publicUser, tokens };

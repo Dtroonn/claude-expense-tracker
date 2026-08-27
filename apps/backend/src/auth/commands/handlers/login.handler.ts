@@ -25,7 +25,10 @@ export class LoginHandler implements ICommandHandler<LoginCommand> {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const publicUser = userResponseSchema.parse(user);
+    const publicUser = userResponseSchema.parse({
+      ...user,
+      createdAt: user.createdAt.toISOString(),
+    });
     const tokens = await this.tokenService.issueTokens(publicUser);
 
     return { user: publicUser, tokens };
