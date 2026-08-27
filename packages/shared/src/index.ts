@@ -10,3 +10,5 @@
  * app grows — this file only carries the health contract used by the scaffold.
  */
 export * from './health';
+export * from './user';
+export * from './auth';

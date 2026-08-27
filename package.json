@@ -51,7 +51,8 @@
       "unrs-resolver",
       "@tailwindcss/oxide",
       "sharp",
-      "esbuild"
+      "esbuild",
+      "bcrypt"
     ]
   }
 }

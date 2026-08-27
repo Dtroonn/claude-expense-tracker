@@ -2,15 +2,20 @@
   "name": "@expense-tracker/shared",
   "version": "0.0.0",
   "private": true,
-  "main": "./src/index.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
   "types": "./src/index.ts",
   "exports": {
     ".": {
       "types": "./src/index.ts",
-      "default": "./src/index.ts"
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
     }
   },
   "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
@@ -21,6 +26,7 @@
     "@expense-tracker/eslint-config": "workspace:*",
     "@expense-tracker/tsconfig": "workspace:*",
     "eslint": "^10.8.1",
+    "tsup": "^8.5.1",
     "typescript": "5.9.3"
   }
 }

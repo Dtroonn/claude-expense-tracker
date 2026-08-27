@@ -16,7 +16,7 @@ generator client {
   output                 = "../src/generated/prisma"
   moduleFormat           = "cjs"
   generatedFileExtension = "ts"
-  importFileExtension    = "cjs"
+  importFileExtension    = "js"
 }
 
 datasource db {
@@ -24,4 +24,27 @@ datasource db {
   // (migrate, studio) now lives in ../prisma.config.ts, and the runtime client
   // gets it via a driver adapter — see src/prisma/prisma.service.ts.
   provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  refreshTokens RefreshToken[]
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  tokenHash String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
 }
