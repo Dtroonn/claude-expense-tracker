@@ -112,6 +112,7 @@ category/
 `Category` / `Prisma.CategoryCreateInput` из `@/generated/prisma/client`.
 
 Методы:
+
 - `create(input: Prisma.CategoryCreateInput): Promise<Category>`
 - `findManyByUserId(userId: string): Promise<Category[]>` — `orderBy: { title: 'asc' }`
 - `findByIdForUser(id: string, userId: string): Promise<Category | null>` — `findFirst({ where: { id, userId } })`
@@ -205,6 +206,7 @@ export class CategoryController {
 из `main.ts`, а zod-схемы тел запросов глобальный пайп не трогает (типы тел — не классы).
 
 Переиспользуемое, уже существующее:
+
 - `apps/backend/src/auth/guards/jwt-auth.guard.ts` — `JwtAuthGuard`
 - `apps/backend/src/auth/decorators/current-user.decorator.ts` — `@CurrentUser()`
 - `apps/backend/src/common/pipes/zod-validation.pipe.ts` — `ZodValidationPipe`

@@ -33,20 +33,20 @@ DTO-классы (`createZodDto`) разместить в самих модул�
 
 `user.ts`:
 
-| было | стало |
-| --- | --- |
+| было               | стало                |
+| ------------------ | -------------------- |
 | `publicUserSchema` | `userResponseSchema` |
-| `PublicUser` | `UserResponseDto` |
+| `PublicUser`       | `UserResponseDto`    |
 
 `auth.ts`:
 
-| было | стало |
-| --- | --- |
-| `registerRequestSchema` / `RegisterRequest` | `registerSchema` / `RegisterDto` |
-| `loginRequestSchema` / `LoginRequest` | `loginSchema` / `LoginDto` |
-| `refreshRequestSchema` / `RefreshRequest` | `refreshSchema` / `RefreshDto` |
-| `authTokensSchema` / `AuthTokens` | `authTokensSchema` / `AuthTokensDto` |
-| `authResponseSchema` / `AuthResponse` | `authResponseSchema` / `AuthResponseDto` |
+| было                                        | стало                                    |
+| ------------------------------------------- | ---------------------------------------- |
+| `registerRequestSchema` / `RegisterRequest` | `registerSchema` / `RegisterDto`         |
+| `loginRequestSchema` / `LoginRequest`       | `loginSchema` / `LoginDto`               |
+| `refreshRequestSchema` / `RefreshRequest`   | `refreshSchema` / `RefreshDto`           |
+| `authTokensSchema` / `AuthTokens`           | `authTokensSchema` / `AuthTokensDto`     |
+| `authResponseSchema` / `AuthResponse`       | `authResponseSchema` / `AuthResponseDto` |
 
 `health.ts`: `healthResponseSchema` остаётся, `HealthResponse` → `HealthResponseDto`.
 
