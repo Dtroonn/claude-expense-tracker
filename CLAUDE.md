@@ -15,6 +15,12 @@ client: the generator emits `.ts` sources with `.js` import specifiers, and Jest
 those — it breaks as soon as anything in the module graph reaches `PrismaService`, which the
 auth stack does. Verify work with `pnpm typecheck` and `pnpm lint` instead.
 
+## Commit messages
+
+This repo follows [Conventional Commits](https://www.conventionalcommits.org/ru/v1.0.0/)
+(`<type>[optional scope]: <description>`, e.g. `feat(transaction): add transaction module`).
+Existing history predates this convention and was not rewritten; apply it going forward.
+
 ## Commands
 
 All commands run from the repo root and fan out through Turborepo.

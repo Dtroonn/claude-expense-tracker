@@ -7,10 +7,11 @@
  * responses). One source of truth, no hand-kept duplicate interfaces.
  *
  * Domain contracts (expenses, categories, budgets) go in sibling modules as the
- * app grows. Currently: health, user, auth, category.
+ * app grows. Currently: health, user, auth, category, transaction.
  */
 export * from './common';
 export * from './health';
 export * from './user';
 export * from './auth';
 export * from './category';
+export * from './transaction';

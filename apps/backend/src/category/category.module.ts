@@ -15,5 +15,6 @@ const queryHandlers = [GetCategoriesHandler];
   imports: [CqrsModule, AuthModule],
   controllers: [CategoryController],
   providers: [CategoryRepository, ...commandHandlers, ...queryHandlers],
+  exports: [CategoryRepository],
 })
 export class CategoryModule {}

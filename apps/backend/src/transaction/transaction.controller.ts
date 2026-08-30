@@ -1,0 +1,111 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { type TransactionResponseDto, type UserResponseDto } from '@expense-tracker/shared';
+import { ZodResponse } from 'nestjs-zod';
+import { CreateTransactionDtoClass } from './dto/create-transaction.dto';
+import { TransactionFilterQueryDtoClass } from './dto/transaction-filter-query.dto';
+import { TransactionResponseDtoClass } from './dto/transaction-response.dto';
+import { TransactionSummaryDtoClass } from './dto/transaction-summary.dto';
+import { TransactionSummaryQueryDtoClass } from './dto/transaction-summary-query.dto';
+import { UpdateTransactionDtoClass } from './dto/update-transaction.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CreateTransactionCommand } from './commands/create-transaction.command';
+import { DeleteTransactionCommand } from './commands/delete-transaction.command';
+import { UpdateTransactionCommand } from './commands/update-transaction.command';
+import { GetTransactionQuery } from './queries/get-transaction.query';
+import { GetTransactionSummaryQuery } from './queries/get-transaction-summary.query';
+import { GetTransactionsQuery } from './queries/get-transactions.query';
+import { type Transaction } from '@/generated/prisma/client';
+
+function toDto(transaction: Transaction): TransactionResponseDto {
+  return {
+    ...transaction,
+    amount: transaction.amount.toNumber(),
+    date: transaction.date.toISOString(),
+    createdAt: transaction.createdAt.toISOString(),
+  };
+}
+
+@ApiTags('transactions')
+@ApiBearerAuth()
+@Controller('transactions')
+@UseGuards(JwtAuthGuard)
+export class TransactionController {
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+  ) {}
+
+  @Post()
+  @ZodResponse({ type: TransactionResponseDtoClass })
+  async create(
+    @CurrentUser() user: UserResponseDto,
+    @Body() body: CreateTransactionDtoClass,
+  ): Promise<TransactionResponseDto> {
+    const transaction = await this.commandBus.execute(new CreateTransactionCommand(user.id, body));
+    return toDto(transaction);
+  }
+
+  @Get()
+  @ZodResponse({ type: [TransactionResponseDtoClass] })
+  async findAll(
+    @CurrentUser() user: UserResponseDto,
+    @Query() query: TransactionFilterQueryDtoClass,
+  ): Promise<TransactionResponseDto[]> {
+    const transactions = await this.queryBus.execute(new GetTransactionsQuery(user.id, query));
+    return transactions.map(toDto);
+  }
+
+  @Get('summary')
+  @ZodResponse({ type: TransactionSummaryDtoClass })
+  summary(@CurrentUser() user: UserResponseDto, @Query() query: TransactionSummaryQueryDtoClass) {
+    return this.queryBus.execute(new GetTransactionSummaryQuery(user.id, query.month, query.year));
+  }
+
+  @Get(':id')
+  @ZodResponse({ type: TransactionResponseDtoClass })
+  async findOne(
+    @CurrentUser() user: UserResponseDto,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<TransactionResponseDto> {
+    const transaction = await this.queryBus.execute(new GetTransactionQuery(user.id, id));
+    return toDto(transaction);
+  }
+
+  @Patch(':id')
+  @ZodResponse({ type: TransactionResponseDtoClass })
+  async update(
+    @CurrentUser() user: UserResponseDto,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: UpdateTransactionDtoClass,
+  ): Promise<TransactionResponseDto> {
+    const transaction = await this.commandBus.execute(
+      new UpdateTransactionCommand(user.id, id, body),
+    );
+    return toDto(transaction);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  delete(
+    @CurrentUser() user: UserResponseDto,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    return this.commandBus.execute(new DeleteTransactionCommand(user.id, id));
+  }
+}
