@@ -31,7 +31,7 @@ export function LoginForm({ next }: { next?: string }) {
       return;
     }
 
-    router.push(next && next.startsWith('/') ? next : ROUTES.dashboard);
+    router.push(next && next.startsWith('/') ? next : ROUTES.home);
     // Without this, the client router would otherwise serve a cached RSC payload
     // rendered before the session cookie existed.
     router.refresh();

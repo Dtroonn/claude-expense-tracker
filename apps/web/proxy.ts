@@ -20,7 +20,12 @@ import { ROUTES, PROTECTED_PATHS } from '@/shared/config';
  */
 
 function isProtected(pathname: string): boolean {
-  return PROTECTED_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
+  // The `path !== '/'` guard matters: ROUTES.home is '/', and without it
+  // `pathname.startsWith('/')` would be true for every path — including
+  // /login — producing a redirect loop. Don't "simplify" this away.
+  return PROTECTED_PATHS.some(
+    (path) => pathname === path || (path !== '/' && pathname.startsWith(`${path}/`)),
+  );
 }
 
 function redirectToLogin(request: NextRequest): NextResponse {
@@ -46,7 +51,7 @@ export default async function proxy(request: NextRequest) {
 
   // On /login or /register with a still-usable session, bounce to /dashboard.
   if (accessUsable && (pathname === ROUTES.login || pathname === ROUTES.register)) {
-    return NextResponse.redirect(new URL(ROUTES.dashboard, request.url));
+    return NextResponse.redirect(new URL(ROUTES.home, request.url));
   }
 
   if (accessUsable) {
@@ -80,7 +85,7 @@ export default async function proxy(request: NextRequest) {
       }
 
       if (pathname === ROUTES.login || pathname === ROUTES.register) {
-        return NextResponse.redirect(new URL(ROUTES.dashboard, request.url));
+        return NextResponse.redirect(new URL(ROUTES.home, request.url));
       }
       return response;
     }
@@ -107,5 +112,9 @@ export default async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/login', '/register'],
+  // Literal paths only (no regex catch-all): `:path*` is "zero or more", so
+  // '/categories/:path*' already covers bare '/categories'. Must stay in sync
+  // with PROTECTED_PATHS by hand — see the comment there. Omitting a protected
+  // route here means it gets no proactive refresh (see server-fetch.ts).
+  matcher: ['/', '/categories/:path*', '/profile/:path*', '/login', '/register'],
 };

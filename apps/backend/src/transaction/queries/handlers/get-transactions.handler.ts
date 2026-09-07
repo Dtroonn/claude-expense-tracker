@@ -7,6 +7,6 @@ export class GetTransactionsHandler implements IQueryHandler<GetTransactionsQuer
   constructor(private readonly transactionRepository: TransactionRepository) {}
 
   execute(query: GetTransactionsQuery) {
-    return this.transactionRepository.findManyByUserId(query.userId, query.filter);
+    return this.transactionRepository.findPageByUserId(query.userId, query.query);
   }
 }

@@ -27,3 +27,12 @@ export {
 } from './dropdown-menu';
 export { Input } from './input';
 export { Label } from './label';
+export {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationEllipsis,
+} from './pagination';

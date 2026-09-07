@@ -4,10 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-Early. The Prisma schema has `User`, `RefreshToken`, and `Category`; the backend has a health
-endpoint, a working auth stack (register / login / refresh / logout, JWT access tokens with
-rotating opaque refresh tokens), and CRUD for categories. Expense/budget modelling is still to
-be written.
+Early. The Prisma schema has `User`, `RefreshToken`, `Category`, and `Transaction`; the backend
+has a health endpoint, a working auth stack (register / login / refresh / logout, JWT access
+tokens with rotating opaque refresh tokens), CRUD for categories, and CRUD + a paginated list +
+a monthly summary for transactions. The frontend's main screen (`/`) lists the current month's
+transactions with pagination behind a sidebar shared with `/categories` and `/profile`. Budget
+modelling is still to be written.
 
 **Testing is out of scope for now.** Don't add tests, and don't treat a failing `pnpm test` /
 `pnpm test:e2e` as a blocker. The e2e suite currently fails to resolve the generated Prisma
@@ -199,10 +201,12 @@ that can both run pre-render and write cookies.
 and a slice's public surface is its `index.ts` barrel — reach into another slice's internals
 (`features/auth-login/ui/login-form.tsx` from outside that slice) and you've broken the
 convention, even though nothing enforces it (see below). Slices at the same layer don't import
-each other. There is no `widgets` layer currently — the one candidate (the account card on
-`/dashboard`) is used by exactly one page, so it lives as a private, non-barrelled component
-inside `_pages/dashboard/ui/` instead; add `widgets` back only once something is genuinely
-shared across pages.
+each other. **There is a `widgets` layer, holding exactly one slice: `widgets/sidebar`** — the
+nav shared by `/`, `/categories`, and `/profile`. It earns the layer precisely because it's used
+by more than one page; a component used by only one page (e.g. the profile screen's account
+card) still belongs as a private, non-barrelled component inside that page's own `_pages/*/ui/`
+directory instead. Don't add further `widgets` slices speculatively — the bar stays "genuinely
+shared across pages," not "feels reusable."
 
 **Two slices are named with a leading underscore, `_app` and `_pages`, for a Next-specific
 reason, not an FSD one.** Next.js routing lives in `apps/web/app` (outside `src`, per Next's
@@ -228,7 +232,16 @@ refresh to set the same two cookies) and `API_URL`/`proxyErrorResponse` from `@/
 It's server-only — a module-level in-flight dedup `Map` plus a direct backend call — and
 folding it into the barrel would let a client component pull it into the browser bundle by
 importing something else from `@/shared/auth`. Its only consumer,
-`apps/web/app/api/auth/refresh/route.ts`, imports it directly via `@/shared/auth/refresh`.
+`apps/web/app/api/auth/refresh/route.ts`, imports it directly via `@/shared/auth/refresh`. The
+same pattern repeats for `@/shared/api/server-fetch.ts` (the authenticated fetch helper used by
+Server Components to call the backend) and for each entity's `api/*.ts` modules
+(`entities/transaction/api/*`, `entities/category/api/*`): none of these are re-exported from
+their slice's barrel, for the same reason. Be clear that this is a graph-organization
+convention, not an enforced boundary — nothing stops a deep import of these modules from a
+client component, and the actual hard failure would come from `next/headers` itself refusing to
+bundle for the client. `server-fetch.ts` also deliberately does not attempt to refresh an
+expired access token — see its own doc comment for why that would silently break login instead
+of fixing it.
 
 **No lint rule enforces any of this.** Layer direction and barrel-only imports are convention,
 checked by review, not by `eslint.config.mjs`. If violations start recurring, revisit adding

@@ -1,7 +1,7 @@
 import { Query } from '@nestjs/cqrs';
-import { type Transaction } from '@/generated/prisma/client';
+import { type TransactionWithCategory } from '../transaction.repository';
 
-export class GetTransactionQuery extends Query<Transaction> {
+export class GetTransactionQuery extends Query<TransactionWithCategory> {
   constructor(
     public readonly userId: string,
     public readonly id: string,

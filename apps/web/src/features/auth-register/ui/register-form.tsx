@@ -38,7 +38,7 @@ export function RegisterForm({ next }: { next?: string }) {
       return;
     }
 
-    router.push(next && next.startsWith('/') ? next : ROUTES.dashboard);
+    router.push(next && next.startsWith('/') ? next : ROUTES.home);
     router.refresh();
   }
 

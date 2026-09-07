@@ -14,13 +14,18 @@ import {
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { type TransactionResponseDto, type UserResponseDto } from '@expense-tracker/shared';
+import {
+  type PaginatedTransactionsDto,
+  type TransactionResponseDto,
+  type UserResponseDto,
+} from '@expense-tracker/shared';
 import { ZodResponse } from 'nestjs-zod';
 import { CreateTransactionDtoClass } from './dto/create-transaction.dto';
-import { TransactionFilterQueryDtoClass } from './dto/transaction-filter-query.dto';
+import { PaginatedTransactionsDtoClass } from './dto/paginated-transactions.dto';
 import { TransactionResponseDtoClass } from './dto/transaction-response.dto';
 import { TransactionSummaryDtoClass } from './dto/transaction-summary.dto';
 import { TransactionSummaryQueryDtoClass } from './dto/transaction-summary-query.dto';
+import { TransactionsQueryDtoClass } from './dto/transactions-query.dto';
 import { UpdateTransactionDtoClass } from './dto/update-transaction.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -30,9 +35,9 @@ import { UpdateTransactionCommand } from './commands/update-transaction.command'
 import { GetTransactionQuery } from './queries/get-transaction.query';
 import { GetTransactionSummaryQuery } from './queries/get-transaction-summary.query';
 import { GetTransactionsQuery } from './queries/get-transactions.query';
-import { type Transaction } from '@/generated/prisma/client';
+import { type TransactionWithCategory } from './transaction.repository';
 
-function toDto(transaction: Transaction): TransactionResponseDto {
+function toDto(transaction: TransactionWithCategory): TransactionResponseDto {
   return {
     ...transaction,
     amount: transaction.amount.toNumber(),
@@ -62,13 +67,25 @@ export class TransactionController {
   }
 
   @Get()
-  @ZodResponse({ type: [TransactionResponseDtoClass] })
+  @ZodResponse({ type: PaginatedTransactionsDtoClass })
   async findAll(
     @CurrentUser() user: UserResponseDto,
-    @Query() query: TransactionFilterQueryDtoClass,
-  ): Promise<TransactionResponseDto[]> {
-    const transactions = await this.queryBus.execute(new GetTransactionsQuery(user.id, query));
-    return transactions.map(toDto);
+    @Query() query: TransactionsQueryDtoClass,
+  ): Promise<PaginatedTransactionsDto> {
+    const { items, total } = await this.queryBus.execute(new GetTransactionsQuery(user.id, query));
+    const totalPages = Math.max(1, Math.ceil(total / query.limit));
+
+    return {
+      items: items.map(toDto),
+      meta: {
+        page: query.page,
+        limit: query.limit,
+        total,
+        totalPages,
+        hasPrev: query.page > 1,
+        hasNext: query.page < totalPages,
+      },
+    };
   }
 
   @Get('summary')
