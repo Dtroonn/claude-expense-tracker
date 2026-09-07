@@ -22,8 +22,9 @@ export class UnauthorizedError extends Error {}
  * that calls this ends up outside that matcher, requests here will start 401ing
  * once the access token expires.
  *
- * `cache: 'no-store'` is not an optimization to revisit — every response here is
- * scoped to the current user, and Next's fetch cache has no per-user dimension.
+ * No explicit `cache: 'no-store'` here: reading the cookie via `cookies()` already
+ * opts the request into Next's dynamic rendering, which excludes it from the fetch
+ * cache without needing the option spelled out.
  */
 export async function serverFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const accessToken = (await cookies()).get(ACCESS_COOKIE)?.value;
@@ -35,7 +36,6 @@ export async function serverFetch<T>(path: string, init?: RequestInit): Promise<
       ...init?.headers,
       Authorization: `Bearer ${accessToken}`,
     },
-    cache: 'no-store',
   });
 
   if (res.status === 401) throw new UnauthorizedError();
