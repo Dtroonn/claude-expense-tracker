@@ -2,13 +2,20 @@ import { redirect } from 'next/navigation';
 import { getSession } from '@/entities/user';
 import { getCategories } from '@/entities/category/api/get-categories';
 import { CategoryRow } from '@/entities/category';
+import { UnauthorizedError } from '@/shared/api/server-fetch';
 import { ROUTES } from '@/shared/config';
 
 export async function CategoriesPage() {
   const user = await getSession();
   if (!user) redirect(ROUTES.login);
 
-  const categories = await getCategories();
+  let categories;
+  try {
+    categories = await getCategories();
+  } catch (error) {
+    if (error instanceof UnauthorizedError) redirect(ROUTES.login);
+    throw error;
+  }
 
   return (
     <div className="flex flex-col gap-6">

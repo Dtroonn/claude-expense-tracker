@@ -1,5 +1,5 @@
 import { type IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { type TransactionSummaryDto } from '@expense-tracker/shared';
+import { monthRangeUtc, type TransactionSummaryDto } from '@expense-tracker/shared';
 import { TransactionRepository } from '../../transaction.repository';
 import { GetTransactionSummaryQuery } from '../get-transaction-summary.query';
 
@@ -8,8 +8,7 @@ export class GetTransactionSummaryHandler implements IQueryHandler<GetTransactio
   constructor(private readonly transactionRepository: TransactionRepository) {}
 
   async execute(query: GetTransactionSummaryQuery): Promise<TransactionSummaryDto> {
-    const from = new Date(Date.UTC(query.year, query.month - 1, 1));
-    const to = new Date(Date.UTC(query.year, query.month, 1));
+    const { from, to } = monthRangeUtc(query.year, query.month);
 
     const groups = await this.transactionRepository.sumByTypeForPeriod(query.userId, from, to);
 

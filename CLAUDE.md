@@ -29,6 +29,24 @@ This repo follows [Conventional Commits](https://www.conventionalcommits.org/ru/
 (`<type>[optional scope]: <description>`, e.g. `feat(transaction): add transaction module`).
 Existing history predates this convention and was not rewritten; apply it going forward.
 
+## Pull requests
+
+PRs target `main` and use `gh pr create`. The title follows Conventional Commits, same as
+commit messages (`<type>[optional scope]: <description>`) — it's fine for the title to match
+the branch's main commit if there's a single logical change. The body has two sections:
+
+- **Summary** — a few bullet points on what changed and why, covering both frontend and
+  backend when a PR touches both. Written from `git diff main`, not from memory of the work,
+  so it reflects what's actually in the diff.
+- **Test plan** — a checklist of how to verify the change: `pnpm typecheck` / `pnpm lint`
+  always, plus manual verification steps for anything with user-facing behavior (a page to
+  visit, a flow to click through). Leave boxes unchecked; they're for whoever reviews or
+  merges to tick off, not a claim that they were run.
+
+Before opening a PR, make sure the branch's work is actually committed — check `git status`
+first, and commit any outstanding changes (per the Conventional Commits convention above)
+rather than pushing a branch whose tip doesn't reflect the work.
+
 ## Commands
 
 All commands run from the repo root and fan out through Turborepo.

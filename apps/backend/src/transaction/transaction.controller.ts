@@ -17,6 +17,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   type PaginatedTransactionsDto,
   type TransactionResponseDto,
+  type TransactionSummaryDto,
   type UserResponseDto,
 } from '@expense-tracker/shared';
 import { ZodResponse } from 'nestjs-zod';
@@ -90,7 +91,10 @@ export class TransactionController {
 
   @Get('summary')
   @ZodResponse({ type: TransactionSummaryDtoClass })
-  summary(@CurrentUser() user: UserResponseDto, @Query() query: TransactionSummaryQueryDtoClass) {
+  summary(
+    @CurrentUser() user: UserResponseDto,
+    @Query() query: TransactionSummaryQueryDtoClass,
+  ): Promise<TransactionSummaryDto> {
     return this.queryBus.execute(new GetTransactionSummaryQuery(user.id, query.month, query.year));
   }
 

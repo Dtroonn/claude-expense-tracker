@@ -1,7 +1,8 @@
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { CommandHandler, type ICommandHandler } from '@nestjs/cqrs';
 import { CategoryRepository } from '../../category.repository';
 import { DeleteCategoryCommand } from '../delete-category.command';
+import { Prisma } from '@/generated/prisma/client';
 
 @CommandHandler(DeleteCategoryCommand)
 export class DeleteCategoryHandler implements ICommandHandler<DeleteCategoryCommand> {
@@ -14,6 +15,14 @@ export class DeleteCategoryHandler implements ICommandHandler<DeleteCategoryComm
       throw new NotFoundException('Category not found');
     }
 
-    await this.categoryRepository.delete(command.id);
+    try {
+      await this.categoryRepository.delete(command.id);
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+        throw new ConflictException('Cannot delete a category that has transactions');
+      }
+
+      throw error;
+    }
   }
 }

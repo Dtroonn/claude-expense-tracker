@@ -81,3 +81,17 @@ export const transactionSummarySchema = z.object({
 });
 
 export type TransactionSummaryDto = z.infer<typeof transactionSummarySchema>;
+
+/**
+ * UTC month boundaries as `[from, to)` — `to` is the first instant of the next
+ * month, so callers filter with `date >= from && date < to` rather than
+ * juggling an inclusive last-instant. Shared so the backend's summary query and
+ * the frontend's transaction-list fetch bucket the same calendar month the same
+ * way instead of maintaining the arithmetic twice.
+ */
+export function monthRangeUtc(year: number, month: number): { from: Date; to: Date } {
+  return {
+    from: new Date(Date.UTC(year, month - 1, 1)),
+    to: new Date(Date.UTC(year, month, 1)),
+  };
+}
