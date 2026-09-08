@@ -1,11 +1,14 @@
 import { Query } from '@nestjs/cqrs';
-import { type TransactionFilterQueryDto } from '@expense-tracker/shared';
-import { type Transaction } from '@/generated/prisma/client';
+import { type TransactionsQueryDto } from '@expense-tracker/shared';
+import { type TransactionWithCategory } from '../transaction.repository';
 
-export class GetTransactionsQuery extends Query<Transaction[]> {
+export class GetTransactionsQuery extends Query<{
+  items: TransactionWithCategory[];
+  total: number;
+}> {
   constructor(
     public readonly userId: string,
-    public readonly filter: TransactionFilterQueryDto,
+    public readonly query: TransactionsQueryDto,
   ) {
     super();
   }

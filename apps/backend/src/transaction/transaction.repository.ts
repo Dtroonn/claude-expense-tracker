@@ -1,17 +1,24 @@
 import { Injectable } from '@nestjs/common';
-import { type TransactionFilterQueryDto } from '@expense-tracker/shared';
+import { type TransactionFilterQueryDto, type TransactionsQueryDto } from '@expense-tracker/shared';
 import { PrismaService } from '../prisma/prisma.service';
-import { type Prisma, type Transaction } from '@/generated/prisma/client';
+import { Prisma } from '@/generated/prisma/client';
+
+export type TransactionWithCategory = Prisma.TransactionGetPayload<{
+  include: { category: true };
+}>;
 
 @Injectable()
 export class TransactionRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  create(input: Prisma.TransactionCreateInput): Promise<Transaction> {
-    return this.prisma.client.transaction.create({ data: input });
+  create(input: Prisma.TransactionCreateInput): Promise<TransactionWithCategory> {
+    return this.prisma.client.transaction.create({ data: input, include: { category: true } });
   }
 
-  findManyByUserId(userId: string, filter: TransactionFilterQueryDto): Promise<Transaction[]> {
+  private buildWhere(
+    userId: string,
+    filter: TransactionFilterQueryDto,
+  ): Prisma.TransactionWhereInput {
     const where: Prisma.TransactionWhereInput = { userId };
 
     if (filter.dateFrom || filter.dateTo) {
@@ -29,15 +36,53 @@ export class TransactionRepository {
       where.categoryId = filter.categoryId;
     }
 
-    return this.prisma.client.transaction.findMany({ where, orderBy: { date: 'desc' } });
+    return where;
   }
 
-  findByIdForUser(id: string, userId: string): Promise<Transaction | null> {
-    return this.prisma.client.transaction.findFirst({ where: { id, userId } });
+  /**
+   * `count` and `findMany` share `buildWhere` so `total` can never disagree with
+   * `items` — building the predicate twice would risk one filter being added to
+   * only one of them. `$transaction` gives both queries one consistent snapshot;
+   * without it a concurrent insert between the two could skew `total` relative
+   * to the page actually returned.
+   *
+   * `orderBy` has a secondary `id` key: `date` alone isn't unique, and with
+   * several transactions sharing a date, pure date ordering gives Postgres no
+   * stable tiebreak — rows can duplicate or vanish across page boundaries.
+   */
+  async findPageByUserId(
+    userId: string,
+    query: TransactionsQueryDto,
+  ): Promise<{ items: TransactionWithCategory[]; total: number }> {
+    const where = this.buildWhere(userId, query);
+
+    const [items, total] = await this.prisma.client.$transaction([
+      this.prisma.client.transaction.findMany({
+        where,
+        include: { category: true },
+        orderBy: [{ date: 'desc' }, { id: 'desc' }],
+        skip: (query.page - 1) * query.limit,
+        take: query.limit,
+      }),
+      this.prisma.client.transaction.count({ where }),
+    ]);
+
+    return { items, total };
   }
 
-  update(id: string, data: Prisma.TransactionUpdateInput): Promise<Transaction> {
-    return this.prisma.client.transaction.update({ where: { id }, data });
+  findByIdForUser(id: string, userId: string): Promise<TransactionWithCategory | null> {
+    return this.prisma.client.transaction.findFirst({
+      where: { id, userId },
+      include: { category: true },
+    });
+  }
+
+  update(id: string, data: Prisma.TransactionUpdateInput): Promise<TransactionWithCategory> {
+    return this.prisma.client.transaction.update({
+      where: { id },
+      data,
+      include: { category: true },
+    });
   }
 
   async delete(id: string): Promise<void> {
