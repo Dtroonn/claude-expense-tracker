@@ -11,6 +11,7 @@ export default async function DashboardPage() {
   // requests to this path.
   if (!user) {
     redirect('/login');
+    console.log(user);
   }
 
   return (
