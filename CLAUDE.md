@@ -36,15 +36,7 @@ Workspaces are `@expense-tracker/{web,backend,shared,tsconfig,eslint-config}` â€
 ## Workflow & Git
 
 - **GitHub Flow:** Branch from `main`, never commit directly to `main`.
-<important if="need to write a commit or a title for PR">
-- [Conventional Commits](https://www.conventionalcommits.org/) for commit messages **and** PR
-titles (`feat(transaction): add transaction module`). History predates this; apply going
-forward.
-</important>
-- **PRs:** Use `gh pr create`. Body must include a **Summary** (what changed based on diff) and a **Test plan** (checkboxes for `pnpm typecheck`, `pnpm lint`, and manual UI checks).
-- **Testing:** Out of scope currently. `pnpm test` / `pnpm test:e2e` fail because the Prisma
-  generator emits `.ts` sources with `.js` import specifiers that Jest can't resolve â€” expected,
-  not a regression (details in `apps/backend/CLAUDE.md`). Rely on `pnpm typecheck` and `pnpm lint`.
+- **Testing:** Out of scope currently.
 
 ## Architecture
 
@@ -76,3 +68,7 @@ depends on `emitDecoratorMetadata`. Don't bump to 7.x until Nest supports it.
 
 ESLint is flat config throughout (ESLint 10); app-level `eslint.config.mjs` files just
 re-export from `packages/eslint-config`.
+
+## Updating docs
+
+Check and update @.claude/docs/* after implementing a new feature or fixing a bug
