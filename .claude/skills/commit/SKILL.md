@@ -2,6 +2,7 @@
 name: commit
 description: Create git commits following this repo's Conventional Commits + GitHub Flow rules. Use whenever the user asks to commit changes or write a commit message.
 model: sonnet
+allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git log:*), Bash(git add:*), Bash(git commit:*)
 ---
 
 # Commit conventions
@@ -41,7 +42,3 @@ EOF
 Append any attribution lines required by the current session's system reminders (e.g.
 `Co-Authored-By:` / `Claude-Session:`), if present — do not invent these, use exactly what the
 session context specifies.
-
-## Reference
-
-Full project context: repo root `CLAUDE.md`.
