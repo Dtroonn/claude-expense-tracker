@@ -8,7 +8,8 @@
     "start": "next start --port 3000",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "clean": "rimraf .next .turbo"
+    "clean": "rimraf .next .turbo",
+    "test": "vitest run"
   },
   "dependencies": {
     "@expense-tracker/shared": "workspace:*",
@@ -31,13 +32,19 @@
     "@expense-tracker/eslint-config": "workspace:*",
     "@expense-tracker/tsconfig": "workspace:*",
     "@tailwindcss/postcss": "^4.3.3",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^6.1.1",
     "dotenv": "^17.4.2",
     "eslint": "^10.8.1",
+    "jsdom": "^30.0.1",
     "rimraf": "^6.1.3",
     "tailwindcss": "^4.3.3",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "^5.0.0"
   }
 }
