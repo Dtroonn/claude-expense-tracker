@@ -54,6 +54,26 @@ schema in `apps/backend` that the frontend also needs — it goes in `packages/s
 Query params arrive as strings, so query schemas use `z.coerce` with `.default()`s
 (`paginationQuerySchema`); a controller therefore never sees `undefined` for `page`/`limit`.
 
+## Swagger
+
+`src/swagger.ts` builds the `DocumentBuilder` config (title/description/version, `.addBearerAuth()`)
+and calls `SwaggerModule.setup('docs', ...)`; `main.ts` calls `setupSwagger(app)` after the global
+pipe/CORS are set up. UI is served at `/docs` (`http://localhost:3001/docs`).
+
+The document is generated from decorators already on controllers/DTOs — no separate OpenAPI spec
+to maintain by hand:
+
+- Each controller gets `@ApiTags('<feature>')`; protected ones also get `@ApiBearerAuth()`.
+- `@ZodResponse({ type: XDtoClass })` (from `nestjs-zod`, not `@nestjs/swagger`'s `@ApiResponse`)
+  documents the response schema **and** drives runtime serialization — it's not swagger-only.
+- Request bodies/query DTOs are documented automatically since they're `createZodDto(...)`
+  classes — no extra `@ApiProperty()` needed.
+- `cleanupOpenApiDoc` (from `nestjs-zod`) strips zod-generated schema noise before the doc is
+  served.
+
+A new endpoint only needs the `@ApiTags`/`@ApiBearerAuth`/`@ZodResponse` decorators already
+established in existing controllers — never hand-write an OpenAPI schema.
+
 ## Auth
 
 Access tokens are JWTs (`JWT_ACCESS_SECRET`, `JWT_ACCESS_EXPIRES_IN`) whose payload is
